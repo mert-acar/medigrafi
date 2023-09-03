@@ -4,8 +4,25 @@ from model import Medigrafi
 from utils import create_heatmap
 from torchvision import transforms as T
 
+def preload():
+  trans = T.Compose([
+    T.ToTensor(),                   # Create a tensor 3 x W x H
+    T.Resize(settings.W, antialias=None),  # Resize to 224 x 224 x 3
+    T.Normalize(                    # Normalize the RGB values with imagenet statistics to get standard images
+      mean=settings.IMAGENET_MEAN,
+      std=settings.IMAGENET_STD
+    )
+  ])
 
-def predict(image, heatmap=False, disease=None):
+  model = Medigrafi(
+    pretrained="../checkpoints/densenet_weights",
+    postprocessed=True
+  )
+  model.eval()
+  return trans, model
+
+
+def predict(trans, model, image, heatmap=False, disease=None):
   """
     Parameters
     ==========
@@ -46,22 +63,8 @@ def predict(image, heatmap=False, disease=None):
     The output probabilities and optionally the heatmap for given disease
 
   """
-  trans = T.Compose([
-    T.ToTensor(),                   # Create a tensor 3 x W x H
-    T.Resize(settings.W, antialias=None),  # Resize to 224 x 224 x 3
-    T.Normalize(                    # Normalize the RGB values with imagenet statistics to get standard images
-      mean=settings.IMAGENET_MEAN,
-      std=settings.IMAGENET_STD
-    )
-  ])
   
   image = trans(image).unsqueeze(0) # [3, 224, 224] -> [1, 3, 224, 224] (1 being the batch size, can be N)
-  model = Medigrafi(
-    pretrained="../checkpoints/densenet_weights",
-    postprocessed=True
-  )
-  model.eval()
-
   features, probs = model(image)
   preds = [[lbl, round(prob.item(), 4)] for (lbl, prob) in zip(settings.LABELS, probs[0])]
   pos_preds = list(
@@ -95,7 +98,8 @@ if __name__ == "__main__":
   # image = read_dicom("../data/sample.dcm", model_ready=True)
   image = cv2.imread("../data/cardiomegaly.png")
   image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-  probs, heatmap = predict(image, True)
-  cv2.imshow(f"Heatmap", heatmap)
+  trans, model = preload()
+  probs, heatmap = predict(trans, model, image, True)
+  cv2.imshow("Heatmap", heatmap)
   cv2.waitKey(0)
   cv2.destroyAllWindows()
