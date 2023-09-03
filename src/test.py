@@ -1,5 +1,6 @@
 import os
 import torch
+import settings
 import numpy as np
 from tqdm import tqdm
 from model import Medigrafi
@@ -10,11 +11,11 @@ from sklearn.metrics import roc_auc_score
 
 if __name__ == "__main__":
   transform = T.Compose([
-    T.Resize(224),
     T.ToTensor(),
+    T.Resize(settings.W, antialias=None),
     T.Normalize(
-      mean=(0.485, 0.456, 0.406),
-      std=(0.229, 0.224, 0.225)
+      mean=settings.IMAGENET_MEAN,
+      std=settings.IMAGENET_STD
     )
   ])
 

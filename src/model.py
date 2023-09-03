@@ -1,7 +1,10 @@
 import torch
+import settings
 import torch.nn as nn
+from tabulate import tabulate
 from torchvision import models
 import torch.nn.functional as F
+
 
 class Medigrafi(nn.Module):
   def __init__(self, pretrained=None, postprocessed=False):
@@ -11,16 +14,9 @@ class Medigrafi(nn.Module):
     if pretrained is not None:
       self.load_weights(pretrained)
     self.pp = postprocessed
-    self.pp_weights = {
-      "ps": torch.tensor([
-        0.61, 0.61, 0.58, 0.58, 0.31, 0.5, 0.68,
-        0.62, 0.9, 0.63, 0.41, 0.63, 0.77, 0.45
-      ]),
-      "baseline": torch.tensor([
-        0.103, 0.025, 0.119, 0.177, 0.051, 0.056, 0.012,
-        0.047, 0.042, 0.021, 0.022, 0.015, 0.030, 0.002
-      ])
-    }
+    if self.pp:
+      self.alpha = torch.tensor(settings.PP_WEIGHTS) / torch.tensor(settings.PP_BASELINE)
+
 
   def load_weights(self, path):
     with open(path, 'rb') as f:
@@ -36,30 +32,24 @@ class Medigrafi(nn.Module):
     out = torch.flatten(out, 1)
     out = torch.sigmoid(self.classifier(out))
     if self.pp:
-      f1 = 1 - torch.exp(-(self.pp_weights['ps'] / self.pp_weights['baseline']) * (out / (1 - out)))
-      f2 = 1 + torch.exp(-(self.pp_weights['ps'] / self.pp_weights['baseline']) * (out / (1 - out)))
+      f1 = 1 - torch.exp(-self.alpha * out / (1 - out))
+      f2 = 1 + torch.exp(-self.alpha * out / (1 - out))
       out = f1 / f2
     return [features, out]
 
-if __name__ == "__main__":
-  from PIL import Image
-  from torchvision import transforms
+  def report(self, o):
+    for i in range(o.shape[0]):
+      print(f"== Sample {i + 1} ==")
+      print(
+        tabulate(
+          [[lbl, round(score.item(), 3)] for lbl, score in zip(settings.LABELS, o[i])],
+          headers=["Disease", "Score"],
+        )
+      )
+      print()
 
-  model = Medigrafi(pretrained="../checkpoints/densenet_weights", postprocessed=True)
-  model.eval()
-  
-  image = Image.open("../cardiomegaly.png")
-  image = image.convert("RGB")
-  tra = transforms.Compose([
-    transforms.Resize(224),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize(
-      mean=(0.485, 0.456, 0.406),
-      std=(0.229, 0.224, 0.225)
-    )
-  ])
+  def export_weights_for_heatmap(self):
+    weight = self.classifier.weight
+    bias = self.classifier.bias
+    return weight, bias
 
-  image = tra(image).unsqueeze(0)
-  f, o = model(image)
-  print(o)
