@@ -1,3 +1,4 @@
+import torch
 import settings
 from pprint import pprint
 from model import Medigrafi 
@@ -64,19 +65,20 @@ def predict(trans, model, image, heatmap=False, disease=None):
 
   """
   
-  image = trans(image).unsqueeze(0) # [3, 224, 224] -> [1, 3, 224, 224] (1 being the batch size, can be N)
-  features, probs = model(image)
-  preds = [[lbl, round(prob.item(), 4)] for (lbl, prob) in zip(settings.LABELS, probs[0])]
-  pos_preds = list(
-    sorted(
-      filter(
-        lambda x: x[1] > settings.PREDICTION_THRESHOLD,
-        preds
-      ),
-      key=lambda x: x[1],
-      reverse=True
+  with torch.no_grad():
+    image = trans(image).unsqueeze(0) # [3, 224, 224] -> [1, 3, 224, 224] (1 being the batch size, can be N)
+    features, probs = model(image)
+    preds = [[lbl, round(prob.item(), 4)] for (lbl, prob) in zip(settings.LABELS, probs[0])]
+    pos_preds = list(
+      sorted(
+        filter(
+          lambda x: x[1] > settings.PREDICTION_THRESHOLD,
+          preds
+        ),
+        key=lambda x: x[1],
+        reverse=True
+      )
     )
-  )
   if heatmap:
     if disease is not None and disease in [x[0] for x in pos_preds]:
       label = disease
