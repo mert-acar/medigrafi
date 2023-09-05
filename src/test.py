@@ -10,21 +10,19 @@ from sklearn.metrics import roc_auc_score
 
 
 if __name__ == "__main__":
-  transform = T.Compose([
-    T.ToTensor(),
-    T.Resize(settings.W, antialias=None),
-    T.Normalize(
-      mean=settings.IMAGENET_MEAN,
-      std=settings.IMAGENET_STD
-    )
-  ])
-
   dataloader = torch.utils.data.DataLoader(
     XRayDataset(
       image_path="../data/images/",
       csv_path="../data/nih_labels.csv",
       split="test",
-      transforms=transform
+      transform = T.Compose([
+        T.ToTensor(),
+        T.Resize(settings.W, antialias=None),
+        T.Normalize(
+          mean=settings.IMAGENET_MEAN,
+          std=settings.IMAGENET_STD
+        )
+      ])
     ),
     batch_size=4,
     num_workers=4,
