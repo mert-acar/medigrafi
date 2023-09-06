@@ -27,25 +27,17 @@ class XRayDataset(Dataset):
 
 if __name__ == "__main__":
   from torch.utils.data import DataLoader
-  from torchvision import transforms as T
+  from utils import load_test_transforms
 
   csv_path = "../data/nih_labels.csv"
   image_path = "../data/images/"
-  transform = T.Compose([
-    T.ToTensor(),
-    T.Resize(settings.W, antialias=None),
-    T.Normalize(
-      mean=settings.IMAGENET_MEAN,
-      std=settings.IMAGENET_STD
-    )
-  ])
 
   dataloader = DataLoader(
     XRayDataset(
       image_path,
       csv_path,
       split="test",
-      transforms=transform
+      transforms=load_test_transforms()
     ),
     batch_size=2,
     shuffle=True

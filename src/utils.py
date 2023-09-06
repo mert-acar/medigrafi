@@ -1,12 +1,23 @@
 import cv2
-import torch
 import pydicom
 import settings
 import numpy as np
 from time import time
 from tqdm import tqdm
-import matplotlib.pyplot as plt
+from torchvision import transforms as T 
 from pydicom.pixel_data_handlers.util import apply_voi_lut
+
+
+def load_test_transforms():
+  transforms = T.Compose([
+    T.ToTensor(),
+    T.Resize(settings.W, antialias=None),
+    T.Normalize(
+      mean=settings.IMAGENET_MEAN,
+      std=settings.IMAGENET_STD
+    )
+  ])
+  return transforms
 
 
 def timeit(func, repetitions=1):

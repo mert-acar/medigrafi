@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import tqdm
 from model import Medigrafi
 from dataset import XRayDataset
-from torchvision import transforms as T
+from utils import load_test_transforms
 from sklearn.metrics import roc_auc_score
 
 
@@ -15,14 +15,7 @@ if __name__ == "__main__":
       image_path="../data/images/",
       csv_path="../data/nih_labels.csv",
       split="test",
-      transform = T.Compose([
-        T.ToTensor(),
-        T.Resize(settings.W, antialias=None),
-        T.Normalize(
-          mean=settings.IMAGENET_MEAN,
-          std=settings.IMAGENET_STD
-        )
-      ])
+      transform = load_test_transforms()
     ),
     batch_size=4,
     num_workers=4,

@@ -7,7 +7,7 @@ from tabulate import tabulate
 from torchvision import models
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
-from torchvision import transforms as T
+from utils import load_test_transforms
 from fvcore.nn import FlopCountAnalysis, flop_count_table
 from torchvision.transforms.functional import resize, gaussian_blur
 
@@ -85,18 +85,6 @@ class Medigrafi(nn.Module):
     return heatmap
 
   
-  def load_test_transforms(self):
-    self.transform = T.Compose([
-      T.ToTensor(),
-      T.Resize(settings.W, antialias=None),
-      T.Normalize(
-        mean=settings.IMAGENET_MEAN,
-        std=settings.IMAGENET_STD
-      )
-    ])
-    self.eval()
-
-
   def get_total_flops(self):
     image = torch.randn(1, 3, settings.W, settings.W)
     flops = FlopCountAnalysis(self, image)
@@ -135,7 +123,8 @@ class Medigrafi(nn.Module):
     """
 
     if self.transform is None:
-      self.load_test_transforms() 
+      self.transform = load_test_transforms() 
+      self.eval()
 
     with torch.no_grad():
       image = self.transform(image).unsqueeze(0)
