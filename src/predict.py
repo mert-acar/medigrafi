@@ -1,34 +1,26 @@
-from model import Medigrafi 
+import cv2
+from model import Medigrafi
+import matplotlib.pyplot as plt
+from utils import imread, load_test_transforms
 
+# Load the image
+image = imread("../data/cardiomegaly.png")
 
-def preload_model():
-  model = Medigrafi(
-    pretrained="../checkpoints/densenet_weights",
-    postprocessed=True
-  )
-  model.eval()
-  return model
+# Load the model
+model = Medigrafi("../checkpoints/densenet_weights")
+model.eval() # very important
 
+transform = load_test_transforms()
 
-if __name__ == "__main__":
-  import cv2
-  from utils import timeit, imread
+tensor_image = transform(image).unsqueeze(0)
+# Run inference on the model
+probs = model(tensor_image)
+heatmap = model.create_heatmap("Cardiomegaly")
 
-  # Load the image
-  image = imread("../data/cardiomegaly.png")
+heatmap = cv2.resize(heatmap, image.shape[:-1])
+layered = ((image / 255) * 0.5) + (heatmap * 0.5)
+print(probs)
 
-  # Load the model
-  model = preload_model()
-
-  # Test model performance
-  # predict = timeit(model.predict, 1000)
-  # probs, heatmap = predict(image, heatmap=True)
-  # probs = predict(image)
-
-  # Run inference on the model
-  probs, heatmap = model.predict(image, heatmap=True)
-
-  # Display the results
-  cv2.imshow("Heatmap", heatmap)
-  cv2.waitKey(0)
-  cv2.destroyAllWindows()
+# Display the results
+plt.imshow(layered)
+plt.show()

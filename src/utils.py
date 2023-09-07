@@ -2,9 +2,11 @@ import cv2
 import pydicom
 import settings
 import numpy as np
+from PIL import Image
 from time import time
 from tqdm import tqdm
 from torchvision import transforms as T 
+from pydicom.errors import InvalidDicomError
 from pydicom.pixel_data_handlers.util import apply_voi_lut
 
 
@@ -33,6 +35,27 @@ def timeit(func, repetitions=1):
   return wrapper
 
 
+def fileread(file_like):
+  dcm = False
+  try:
+    dcm_file = pydicom.dcmread(file_like)
+    dcm = True
+  except InvalidDicomError:
+    image = Image.open(file_like)
+    image = image.convert("RGB")
+    image = np.array(image)
+
+  if dcm:
+    image = apply_voi_lut(dcm_file.pixel_array, dcm_file)
+    if dcm_file.PhotometricInterpretation == "MONOCHROME1":
+      image = np.amax(image) - image
+    image = image - np.min(image)
+    image = image / np.max(image)
+    image = (image * 255).astype(np.uint8)
+    image = np.stack([image] * 3, axis=-1)
+  return image
+
+
 def imread(path):
   file_type = path.split(".")[-1]
   assert file_type in settings.ACCEPTED_FILETYPES, f"Invalid file type! Please use one of {settings.ACCEPTED_FILETYPES}"
@@ -49,7 +72,7 @@ def read_dicom(path):
   # Apply default dicom calibration using the parameters inside the file
   image = apply_voi_lut(dcm_file.pixel_array, dcm_file)
 
-  # Invert if monochrome1
+  # Invert f monochrome1
   if dcm_file.PhotometricInterpretation == "MONOCHROME1":
     image = np.amax(image) - image
 
@@ -65,6 +88,7 @@ def read_dicom(path):
 
 
 if __name__ == "__main__":
+  import cv2
   path = "../data/sample.dcm"
   image = imread(path)
   print(f"Image Shape: {image.shape}\nImage Max Pixel: {np.max(image)}\nImage Min Pixel: {np.min(image)}")

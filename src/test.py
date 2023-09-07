@@ -22,10 +22,7 @@ if __name__ == "__main__":
     shuffle=True
   )
 
-  model = Medigrafi(
-    pretrained="../checkpoints/densenet_weights",
-    posprocessed=True
-  )
+  model = Medigrafi("../checkpoints/densenet_weights")
   model.eval()
 
   auc_total = np.zeros((1,14))
