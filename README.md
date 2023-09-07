@@ -2,6 +2,8 @@
 
 To run streamlit app:
 ```
+  source venv/bin/activate
+  cd src
   streamlit run main.py
 ```
 
