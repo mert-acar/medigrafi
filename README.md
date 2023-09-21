@@ -5,6 +5,7 @@ Python version: [3.11.1](https://www.python.org/downloads/release/python-3111/)
 To run streamlit app:
 ```
   source venv/bin/activate
+  pip install -r requirements.txt
   cd src
   streamlit run main.py
 ```
