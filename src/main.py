@@ -57,7 +57,7 @@ if __name__ == "__main__":
         opacity = opacity / 100
         heatmap = cv2.resize(
           ss.model.create_heatmap(label),
-          ss.image.shape[:-1]
+          (ss.image.shape[1], ss.image.shape[0])
         )
         layered = ((1 - opacity) * (ss.image / 255)) + (opacity * heatmap)
         c2.image(layered)
