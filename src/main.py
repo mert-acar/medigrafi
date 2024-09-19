@@ -41,7 +41,7 @@ if __name__ == "__main__":
         ss.probs = ss.model(tensor_image)
         ss.probs = {key: round(value.item(), 4) for (key, value) in zip(settings.LABELS, ss.probs[0])}
         ss.probs = dict(sorted(ss.probs.items(), key=lambda x: x[1], reverse=True))
-        ss.probs = dict(filter(lambda x: x[1] > settings.PREDICTION_THRESHOLD, ss.probs.items()))
+        ss.probs = dict(filter(lambda x: x[1] > settings.PREDICTION_THRESHOLDS[x[0]], ss.probs.items()))
       status.update(label="Inference done! :white_check_mark:", expanded=True, state='complete')
       if len(ss.probs) > 0:
         c1, c2 = st.columns((0.2, 0.8))

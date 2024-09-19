@@ -6,8 +6,22 @@ W = 224
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
 
-
-PREDICTION_THRESHOLD = 0.5
+PREDICTION_THRESHOLDS = {
+  "Atelectasis": 0.45,
+  "Cardiomegaly": 0.5,
+  "Effusion": 0.6,
+  "Infiltration": 0.4,
+  "Mass": 0.5,
+  "Nodule": 0.5,
+  "Pneumonia": 0.45,
+  "Pneumothorax": 0.3,
+  "Consolidation": 0.5,
+  "Edema": 0.25,
+  "Emphysema": 0.8,
+  "Fibrosis": 0.55,
+  "Pleural_Thickening": 0.85,
+  "Hernia": 0.8,
+}
 
 PP_WEIGHTS = [
   0.61, 0.61, 0.58, 0.58, 0.31, 0.5, 0.68,
